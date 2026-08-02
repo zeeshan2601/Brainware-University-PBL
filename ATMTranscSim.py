@@ -1,124 +1,95 @@
-balance = 0.00
-pin = None
-transactions = []
+class ATM:
+    def __init__(self):
+        self.balance = 0.0
+        self.pin = None
+        self.transactions = []
 
+    def _get_amount(self, prompt):
+        try:
+            return float(input(prompt))
+        except Exception:
+            return None
 
-def show_balance():
-    print(f"\nYour current balance is: INR {balance:,.2f}")
+    def _show_balance(self):
+        print(f"\nYour current balance: INR {self.balance:,.2f}")
 
+    def _transact(self, kind):
+        amt = self._get_amount(f"\nEnter amount to {'withdraw' if kind=='withdraw' else 'deposit'}: INR ")
+        if amt is None:
+            print("Please enter a valid number.")
+            return
+        if amt <= 0:
+            print("Amount must be greater than zero.")
+            return
+        if kind == 'withdraw':
+            if amt % 100 != 0:
+                print("Use multiples of INR 100.")
+                return
+            if amt > self.balance:
+                print("Insufficient balance.")
+                return
+            self.balance -= amt
+            self.transactions.append(f"Withdrawn: INR {amt:,.2f}")
+            print(f"Please collect your cash. New balance: INR {self.balance:,.2f}")
+        else:
+            self.balance += amt
+            self.transactions.append(f"Deposited: INR {amt:,.2f}")
+            print(f"Deposit successful. New balance: INR {self.balance:,.2f}")
 
-def withdraw_money():
-    global balance
-    try:
-        amount = float(input("\nEnter amount to withdraw: INR "))
-    except ValueError:
-        print("Please enter a valid number.")
-        return
+    def _show_statement(self):
+        print("\n----- MINI STATEMENT -----")
+        print("No transactions yet." if not self.transactions else "\n".join(self.transactions))
 
-    if amount <= 0:
-        print("Amount must be greater than zero.")
-    elif amount % 100 != 0:
-        print("Please enter an amount in multiples of INR 100.")
-    elif amount > balance:
-        print("Insufficient balance.")
-    else:
-        balance -= amount
-        transactions.append(f"Withdrawn: INR {amount:,.2f}")
-        print(f"Please collect your cash. New balance: INR {balance:,.2f}")
-
-
-def deposit_money():
-    global balance
-    try:
-        amount = float(input("\nEnter amount to deposit: INR "))
-    except ValueError:
-        print("Please enter a valid number.")
-        return
-
-    if amount <= 0:
-        print("Amount must be greater than zero.")
-    else:
-        balance += amount
-        transactions.append(f"Deposited: INR {amount:,.2f}")
-        print(f"Deposit successful. New balance: INR {balance:,.2f}")
-
-
-def show_statement():
-    print("\n----- MINI STATEMENT -----")
-    if len(transactions) == 0:
-        print("No transactions yet.")
-    else:
-        for transaction in transactions:
-            print(transaction)
-
-
-def change_pin():
-    global pin
-    old_pin = input("\nEnter your current PIN: ")
-    new_pin = input("Enter your new 4-digit PIN: ")
-
-    if old_pin != pin:
-        print("Incorrect current PIN.")
-    elif len(new_pin) != 4 or not new_pin.isdigit():
-        print("PIN must contain exactly 4 digits.")
-    else:
-        pin = new_pin
-        print("PIN changed successfully.")
-
-
-def main():
-    global pin
-    print("=" * 45)
-    print("       NATIONAL TRUST ATM")
-    print("=" * 45)
-
-    if pin is None:
-        print("\nWelcome! Please create a new 4-digit PIN to get started.")
-        while True:
-            new_pin = input("Enter new 4-digit PIN: ")
-            if len(new_pin) == 4 and new_pin.isdigit():
-                pin = new_pin
-                print("PIN created successfully. Please log in.")
-                break
+    def _change_pin(self):
+        cur = input("\nEnter your current PIN: ")
+        if cur != self.pin:
+            print("Incorrect current PIN.")
+            return
+        new = input("Enter your new 4-digit PIN: ")
+        if len(new) == 4 and new.isdigit():
+            self.pin = new
+            print("PIN changed successfully.")
+        else:
             print("PIN must contain exactly 4 digits.")
 
-    for attempt in range(3):
-        entered_pin = input("Enter your PIN: ")
-        if entered_pin == pin:
-            print("\nLogin successful. Welcome!")
-            break
-        print("Incorrect PIN.")
-    else:
-        print("Too many incorrect attempts. Card blocked.")
-        return
+    def run(self):
+        print("NATIONAL TRUST ATM".center(45, "="))
+        while self.pin is None:
+            new_pin = input("\nCreate a new 4-digit PIN: ")
+            if len(new_pin) == 4 and new_pin.isdigit():
+                self.pin = new_pin
+                print("PIN created successfully. Please log in.")
+            else:
+                print("PIN must contain exactly 4 digits.")
 
-    while True:
-        print("\n----- ATM MENU -----")
-        print("1. Check balance")
-        print("2. Withdraw money")
-        print("3. Deposit money")
-        print("4. Mini statement")
-        print("5. Change PIN")
-        print("0. Exit")
-
-        choice = input("Choose an option: ")
-
-        if choice == "1":
-            show_balance()
-        elif choice == "2":
-            withdraw_money()
-        elif choice == "3":
-            deposit_money()
-        elif choice == "4":
-            show_statement()
-        elif choice == "5":
-            change_pin()
-        elif choice == "0":
-            print("\nThank you for using the ATM. Goodbye!")
-            break
+        for _ in range(3):
+            if input("Enter your PIN: ") == self.pin:
+                print("\nLogin successful. Welcome!")
+                break
+            print("Incorrect PIN.")
         else:
-            print("Invalid option. Please try again.")
+            print("Too many incorrect attempts. Card blocked.")
+            return
+
+        while True:
+            print("\n----- ATM MENU -----\n1. Check balance\n2. Withdraw money\n3. Deposit money\n4. Mini statement\n5. Change PIN\n0. Exit")
+            choice = input("Choose an option: ")
+            if choice == "1":
+                self._show_balance()
+            elif choice == "2":
+                self._transact('withdraw')
+            elif choice == "3":
+                self._transact('deposit')
+            elif choice == "4":
+                self._show_statement()
+            elif choice == "5":
+                self._change_pin()
+            elif choice == "0":
+                print("\nThank you for using the ATM. Goodbye!")
+                break
+            else:
+                print("Invalid option. Please try again.")
 
 
 if __name__ == "__main__":
-    main()
+    ATM().run()
